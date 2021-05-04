@@ -4,7 +4,7 @@ Merge CSV fields into a MS Word template
 ## Description
 This program allows you to merge rows in a CSV file into a MS Word document.  A PDF file is also saved.
 
-* The first row of the CSF file should contain a header.
+* The first row of the CSV file should contain a header.
 * Example: `Email,First,Last`
 
 * The MS Word document should then contain, case-sensative *macros* with underscores:
