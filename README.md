@@ -1,6 +1,10 @@
 # csv_word_merge
 Merge CSV fields into a MS Word template
 
+**Note:** I threw this together in a couple of hours to help a friend, so it is not as complete as my other projects.
+* Error checking could be improved.
+* Using `concurrent.futures` would also be nice to have to process files faster.
+
 ## Description
 This program allows you to merge rows in a CSV file into a MS Word document.  A PDF file is also saved.
 
