@@ -132,7 +132,7 @@ def create_dest(dest: str):
 def main():
     version_string = f"{pgm_name}, v{pgm_version}, {pgm_url}"
 
-    parser = argparse.ArgumentParser(description="Word Macro Automation")
+    parser = argparse.ArgumentParser(description="Merge CSV fields into a MS Word template")
     parser.add_argument("--csv", "-c", help="csv file containing macros", required=True)
     parser.add_argument("--col", "-C", help="column name for output PDF", required=True)
     parser.add_argument("--dest", "-d", help="destination folder", required=True)
