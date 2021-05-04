@@ -10,6 +10,7 @@ References: https://stackoverflow.com/a/61516850/452281
 
 import argparse
 import csv
+import concurrent.futures
 import os
 import time
 from docx import Document
@@ -18,6 +19,7 @@ from docx2pdf import convert
 pgm_name = "csv_word_merge"
 pgm_version = "1.0.0"
 pgm_url = "https://github.com/jftuga/csv_word_merge"
+
 
 def get_csv_data(fname: str) -> dict:
     all_rows = []
@@ -129,6 +131,26 @@ def create_dest(dest: str):
         os.mkdir(dest, 0o755)
 
 
+def process_row(row: tuple, wordfile: str, col: str, dest: str):
+    document = Document(wordfile)
+    changes = 0
+    if len(row[col]) == 0:
+        print("Skipping row, invalid data: ", row)
+        return
+    changes += docx_replace(document, row)
+
+    print(f"{row=}; number of changes: {changes}")
+    if changes > 0:
+        docx_name = get_docx_name(row, col)
+        docx_name = os.path.join(dest, docx_name)
+        document.save(docx_name)
+        time.sleep(0.1)
+        print(f"{docx_name=}")
+        convert(docx_name)
+    else:
+        print(f"No changes found for {row}")
+
+
 def main():
     version_string = f"{pgm_name}, v{pgm_version}, {pgm_url}"
 
@@ -136,30 +158,17 @@ def main():
     parser.add_argument("--csv", "-c", help="csv file containing macros", required=True)
     parser.add_argument("--col", "-C", help="column name for output PDF", required=True)
     parser.add_argument("--dest", "-d", help="destination folder", required=True)
-    parser.add_argument("--version", "-v", help="display version and then exit", action="version", version=version_string)
+    parser.add_argument("--version", "-v", help="display version and then exit", action="version",
+                        version=version_string)
     parser.add_argument("wordfile", metavar="wordfile", help="MS Word file with macros")
     args = parser.parse_args()
 
     create_dest(args.dest)
-    csvdata = get_csv_data(args.csv)
-    for row in csvdata:
-        document = Document(args.wordfile)
-        changes = 0
-        if len(row[args.col]) == 0:
-            print("Skipping row, invalid data: ", row)
-            continue
-        changes += docx_replace(document, row)
+    csv_data = get_csv_data(args.csv)
 
-        print(f"{row=}; number of changes: {changes}")
-        if changes > 0:
-            docx_name = get_docx_name(row, args.col)
-            docx_name = os.path.join(args.dest, docx_name)
-            document.save(docx_name)
-            time.sleep(0.1)
-            print(f"{docx_name=}")
-            convert(docx_name)
-        else:
-            print(f"No changes found for {row}")
+    max_workers = os.cpu_count()
+    with concurrent.futures.ProcessPoolExecutor(max_workers) as executor:
+        result = {executor.submit(process_row, row, args.wordfile, args.col, args.dest): row for row in csv_data}
 
 
 if "__main__" == __name__:
